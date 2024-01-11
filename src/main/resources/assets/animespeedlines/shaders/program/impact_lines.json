@@ -5,7 +5,7 @@
         "dstrgb": "1-srcalpha"
     },
     "vertex": "sobel",
-    "fragment": "animespeedlines:speed_lines_v2",
+    "fragment": "animespeedlines:impact_lines",
     "attributes": ["Position"],
     "samplers": [{
         "name": "DiffuseSampler"

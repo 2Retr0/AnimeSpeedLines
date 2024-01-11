@@ -2,30 +2,26 @@
     "schemaVersion": 1,
     "id":          "animespeedlines",
     "version":     "${version}",
+
     "name":        "AnimeSpeedLines",
     "description": "This is an example description! Tell everyone what your mod is about!",
-    "authors": [
-        "2Retr0"
-    ],
+    "authors": [ "2Retr0" ],
     "contact": {
-        "homepage": "https://fabricmc.net/",
-        "sources":  "https://github.com/FabricMC/fabric-example-mod"
+        "homepage": "https://github.com/2Retr0/AnimeSpeedLines",
+        "sources": "https://github.com/2Retr0/AnimeSpeedLines",
+        "issues": "https://github.com/2Retr0/AnimeSpeedLines/issues"
     },
     "license": "MIT",
     "icon": "assets/animespeedlines/icon.png",
+
     "environment": "*",
     "entrypoints": {
-        "client": [
-            "retr0.animespeedlines.AnimeSpeedLines"
-        ]
+        "client": [ "retr0.animespeedlines.AnimeSpeedLines" ]
     },
     "mixins": [
       "animespeedlines.mixins.json"
     ],
     "depends": {
-        "fabricloader": ">=0.14.6",
-        "fabric":       "*",
-        "minecraft":    "~1.19",
-        "java":         ">=17"
+        "fabricloader": "*"
     }
 }

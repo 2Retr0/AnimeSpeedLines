@@ -20,10 +20,10 @@ public class AnimeSpeedLines implements ClientModInitializer {
     public static final String MOD_ID = "animespeedlines";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    private boolean renderingBlit = false;
+    private boolean renderingBlit = true;
 
     private final ManagedShaderEffect speedLines = ShaderEffectManager.getInstance().manage(
-        new Identifier(MOD_ID, "shaders/post/speed_lines.json"));
+        new Identifier(MOD_ID, "shaders/post/impact_lines.json"));
     private final Uniform1f uniformSTime = speedLines.findUniform1f("STime");
     private final Uniform1f uniformWeight = speedLines.findUniform1f("Weight");
     private final Uniform1f uniformBias = speedLines.findUniform1f("BiasAngle");
@@ -36,7 +36,7 @@ public class AnimeSpeedLines implements ClientModInitializer {
         // This code runs as soon as Minecraft is in a mod-load-ready state.
         // However, some things (like resources) may still be uninitialized.
         // Proceed with mild caution.
-        LOGGER.info("Hello Fabric world!");
+        LOGGER.info("Hello AnimeSpeedLines!");
 
         ShaderEffectRenderCallback.EVENT.register(tickDelta -> {
             if (renderingBlit) {
@@ -45,13 +45,14 @@ public class AnimeSpeedLines implements ClientModInitializer {
             }
         });
 
-        AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
-            if (world.isClient) {
-                renderingBlit = !renderingBlit;
-                // color.set((float) Math.random(), (float) Math.random(), (float) Math.random(), 1.0f);
-            }
-            return ActionResult.PASS;
-        });
+//        AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
+//            if (world.isClient) {
+//                renderingBlit = !renderingBlit;
+//                // color.set((float) Math.random(), (float) Math.random(), (float) Math.random(), 1.0f);
+//            }
+//            LOGGER.error(String.valueOf(renderingBlit));
+//            return ActionResult.PASS;
+//        });
 
         ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
             if (!minecraftClient.isPaused()) ticks++;
@@ -70,29 +71,26 @@ public class AnimeSpeedLines implements ClientModInitializer {
             vSquared = Math.min(1f, vSquared);
             uniformWeight.set(vSquared);
 
-            var velocity = player.getVelocity();
+            var velocity = player.getVelocity().normalize();
 
             if (vehicle != null) {
-                velocity = vehicle.getVelocity();
+                velocity = vehicle.getVelocity().normalize();
             }
-            var eyeVec = player.getRotationVecClient();
+            var eye = player.getRotationVecClient().normalize();
+            var up = new Vec3d(0, 1, 0);
+            var right = up.crossProduct(eye);
 
-            var proj = projectOntoPlane(velocity, eyeVec);
-
-            double x = proj.x, y = proj.y, z = proj.z;
-
-            var vecX = new Vec3d(1d, 0d, 0d).rotateY(player.getYaw() * (MathHelper.PI / 180f));
-            // https://www.wolframalpha.com/input?i2d=true&i=Divide%5B-Divide%5Ba*d%2Bb*e%2Bc*f%2Csqrt%5C%2840%29%5C%2840%29Power%5Ba%2C2%5D%2BPower%5Bb%2C2%5D%2BPower%5Bc%2C2%5D%5C%2841%29%5C%2840%29Power%5Bd%2C2%5D%2BPower%5Be%2C2%5D%2BPower%5Bf%2C2%5D%5C%2841%29%5C%2841%29%5D%2Csqrt%5C%2840%291-Power%5B%5C%2840%29Divide%5Ba*d%2Bb*e%2Bc*f%2Csqrt%5C%2840%29%5C%2840%29Power%5Ba%2C2%5D%2BPower%5Bb%2C2%5D%2BPower%5Bc%2C2%5D%5C%2841%29%5C%2840%29Power%5Bd%2C2%5D%2BPower%5Be%2C2%5D%2BPower%5Bf%2C2%5D%5C%2841%29%5C%2841%29%5D%5C%2841%29%2C2%5D%5C%2841%29%5D
-            var sim = velocity.normalize().dotProduct(eyeVec);
-            var biasWeight = 1f - Math.abs(sim);
-            var bias = MathHelper.sign(sim) * Math.acos(proj.dotProduct(vecX) / Math.sqrt(proj.lengthSquared() * vecX.lengthSquared())) + MathHelper.PI;
+            // TODO: Not super happy with the angle bias solution since certain scenarios (e.g., looking down) provide
+            //  lines that move in an unnatural direction
+            // Project velocity onto plane described by eye normal
+            var proj = velocity.subtract(eye.multiply(velocity.dotProduct(eye)));
+            // Get signed angle between projected velocity and right w.r.t. eye plane
+            // Source: https://stackoverflow.com/a/33920320
+            var bias = Math.atan2(proj.crossProduct(right).dotProduct(eye), right.dotProduct(proj));
+            var biasWeight = 1f - Math.abs(velocity.dotProduct(eye));
 
             uniformBias.set((float) bias);
             uniformBiasWeight.set((float) biasWeight);
-
-            LOGGER.info("angle: " +  velocity.normalize().dotProduct(eyeVec));
-            // asin(proj.y / sqrt(proj.length())) simplified
-            // LOGGER.info("angle: " +  MathHelper.atan2(y, Math.sqrt(x * x + z * z)) + "");
         });
     }
 
@@ -108,6 +106,6 @@ public class AnimeSpeedLines implements ClientModInitializer {
         var a = planeVec.dotProduct(projVec);
         var b = planeVec.dotProduct(planeVec);
 
-        return projVec.subtract(planeVec.multiply(a / b));
+        return projVec.subtract(planeVec.multiply(projVec.dotProduct(planeVec)));
     }
 }

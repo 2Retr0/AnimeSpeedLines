@@ -4,12 +4,12 @@
     ],
     "passes": [
         {
-            "name": "animespeedlines:speed_lines",
+            "name": "animespeedlines:impact_lines",
             "intarget": "minecraft:main",
             "outtarget": "swap"
         },
         {
-            "name": "animespeedlines:speed_lines",
+            "name": "animespeedlines:impact_lines",
             "intarget": "swap",
             "outtarget": "minecraft:main"
         }
