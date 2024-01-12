@@ -9,9 +9,11 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +21,6 @@ import org.slf4j.LoggerFactory;
 public class AnimeSpeedLines implements ClientModInitializer {
     public static final String MOD_ID = "animespeedlines";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-
-    private boolean renderingBlit = true;
 
     private final ManagedShaderEffect speedLines = ShaderEffectManager.getInstance().manage(
         new Identifier(MOD_ID, "shaders/post/impact_lines.json"));
@@ -31,6 +31,11 @@ public class AnimeSpeedLines implements ClientModInitializer {
 
     private int ticks;
 
+    private float weight = 0f;
+    private float bias = 0f;
+    private float biasWeight = 0f;
+    private boolean shouldRender = false;
+
     @Override
     public void onInitializeClient() {
         // This code runs as soon as Minecraft is in a mod-load-ready state.
@@ -39,73 +44,57 @@ public class AnimeSpeedLines implements ClientModInitializer {
         LOGGER.info("Hello AnimeSpeedLines!");
 
         ShaderEffectRenderCallback.EVENT.register(tickDelta -> {
-            if (renderingBlit) {
-                // make opacity lower at night
-                speedLines.render(tickDelta);
-            }
+            if (!shouldRender) return;
+            speedLines.render(tickDelta);
         });
-
-//        AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
-//            if (world.isClient) {
-//                renderingBlit = !renderingBlit;
-//                // color.set((float) Math.random(), (float) Math.random(), (float) Math.random(), 1.0f);
-//            }
-//            LOGGER.error(String.valueOf(renderingBlit));
-//            return ActionResult.PASS;
-//        });
 
         ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
-            if (!minecraftClient.isPaused()) ticks++;
-        });
+            if (minecraftClient.isPaused()) return;
+            ticks++;
 
-
-        PostWorldRenderCallbackV2.EVENT.register((matrices, camera, tickDelta, nanoTime) -> {
-            uniformSTime.set((ticks + tickDelta) / 20f);
+            // --- Render Condition ---
             var player = MinecraftClient.getInstance().player;
-            var vSquared = (float) MinecraftClient.getInstance().player.getVelocity().lengthSquared();
+            if (player == null) return;
+
+            // Use vehicle velocity instead of player velocity if applicable
             var vehicle = player.getVehicle();
-            if (vehicle != null) {
-                vSquared = (float) vehicle.getVelocity().lengthSquared();
-            }
+            var targetEntity = vehicle == null ? player : vehicle;
+            var velocity = targetEntity.getVelocity();
+            var speed = (float) velocity.lengthSquared();
+            shouldRender = shouldRenderImpactLines(speed);
 
-            vSquared = Math.min(1f, vSquared);
-            uniformWeight.set(vSquared);
+            if (!shouldRender) return;
 
-            var velocity = player.getVelocity().normalize();
-
-            if (vehicle != null) {
-                velocity = vehicle.getVelocity().normalize();
-            }
-            var eye = player.getRotationVecClient().normalize();
-            var up = new Vec3d(0, 1, 0);
+            // --- Uniform Calculations ---
+            var eye = player.getRotationVecClient(); // Relative to [0,0,1]
+            var up = Vec3d.fromPolar(new Vec2f(player.getPitch() - 90f, player.getYaw()));
             var right = up.crossProduct(eye);
 
-            // TODO: Not super happy with the angle bias solution since certain scenarios (e.g., looking down) provide
-            //  lines that move in an unnatural direction
+            velocity = velocity.normalize();
+            var vDotEye = velocity.dotProduct(eye);
             // Project velocity onto plane described by eye normal
-            var proj = velocity.subtract(eye.multiply(velocity.dotProduct(eye)));
+            var proj = velocity.subtract(eye.multiply(vDotEye));
             // Get signed angle between projected velocity and right w.r.t. eye plane
             // Source: https://stackoverflow.com/a/33920320
-            var bias = Math.atan2(proj.crossProduct(right).dotProduct(eye), right.dotProduct(proj));
-            var biasWeight = 1f - Math.abs(velocity.dotProduct(eye));
+            var angle = (float) MathHelper.atan2(proj.crossProduct(right).dotProduct(eye), right.dotProduct(proj));
 
-            uniformBias.set((float) bias);
-            uniformBiasWeight.set((float) biasWeight);
+            weight = Math.min(1f, speed);
+            bias = angle;
+            biasWeight = 1f - MathHelper.abs((float) vDotEye);
+
+        });
+
+        PostWorldRenderCallbackV2.EVENT.register((matrices, camera, tickDelta, nanoTime) -> {
+            if (!shouldRender) return;
+
+            uniformSTime.set((ticks + tickDelta) / 20f);
+            uniformWeight.set(weight);
+            uniformBias.set(bias);
+            uniformBiasWeight.set(biasWeight);
         });
     }
 
-
-
-    /**
-     * Projects a vector onto a plane described by its normal vector.
-     * @param projVec The vector to be projected.
-     * @param planeVec The normal vector describing the target plane.
-     * @return The projected vector on the plane.
-     */
-    Vec3d projectOntoPlane(Vec3d projVec, Vec3d planeVec) {
-        var a = planeVec.dotProduct(projVec);
-        var b = planeVec.dotProduct(planeVec);
-
-        return projVec.subtract(planeVec.multiply(projVec.dotProduct(planeVec)));
+    private boolean shouldRenderImpactLines(float speed) {
+        return speed >= 0.2f; // Roughly the speed of sprinting on ice
     }
 }
