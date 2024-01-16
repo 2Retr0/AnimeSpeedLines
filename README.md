@@ -11,7 +11,7 @@ Is your experience playing Minecraft too _slow_&thinsp;? Do you find riding _ice
 <iframe style='width:100%; height:800px;' src="https://www.youtube-nocookie.com/embed/WRszmlG61Tk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 <sup><b>·</b> *Effect is exaggerated in the demo—it's slightly less obtrusive in-game! Shaders used in demo are <a href="[url](https://www.complementary.dev)">Complementary Shaders</a>.</sup><p></p>
 -->
-https://github.com/2Retr0/AnimeSpeedLines/assets/18603664/d2e52c70-997b-44a5-a74d-1921c3175843
+https://github.com/2Retr0/AnimeSpeedLines/assets/18603664/de05ff0d-b2ff-4bd7-b9b7-b5e8d320d3d3
 
 <sup> *Effect is exaggerated in the demo—it's slightly less obtrusive in-game! Shaders used in demo are <a href="[url](https://www.complementary.dev)">Complementary Shaders</a>.</sup><p></p>
 
