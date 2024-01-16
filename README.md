@@ -13,7 +13,7 @@ Is your experience playing Minecraft too _slow_&thinsp;? Do you find riding _ice
 -->
 https://github.com/2Retr0/AnimeSpeedLines/assets/18603664/de05ff0d-b2ff-4bd7-b9b7-b5e8d320d3d3
 
-<sup> *Effect is exaggerated in the demo—it's slightly less obtrusive in-game! Shaders used in demo are <a href="[url](https://www.complementary.dev)">Complementary Shaders</a>.</sup><p></p>
+<sup> *Effect is exaggerated in the demo—it's slightly less obtrusive in-game! Shaders used in demo are [Complementary Shaders](https://www.complementary.dev).</sup><p></p>
 
 ## Features
 ...This mod is basically built around a single shader I made (lol), but care has been taken to change how the effect interacts with the game environment beyond speed scaling—specifically:
