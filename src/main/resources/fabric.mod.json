@@ -4,7 +4,7 @@
     "version":     "${version}",
 
     "name":        "AnimeSpeedLines",
-    "description": "This is an example description! Tell everyone what your mod is about!",
+    "description": "Introduces an overlay effect that enhances the feeling of moving quickly... when moving quickly.",
     "authors": [ "2Retr0" ],
     "contact": {
         "homepage": "https://github.com/2Retr0/AnimeSpeedLines",
@@ -18,9 +18,6 @@
     "entrypoints": {
         "client": [ "retr0.animespeedlines.AnimeSpeedLines" ]
     },
-    "mixins": [
-      "animespeedlines.mixins.json"
-    ],
     "depends": {
         "fabricloader": "*"
     }

@@ -30,7 +30,6 @@ public class AnimeSpeedLines implements ClientModInitializer {
     private final Uniform1f uniformBiasWeight = speedLines.findUniform1f("BiasWeight");
 
     private int ticks;
-
     private float weight = 0f;
     private float bias = 0f;
     private float biasWeight = 0f;
@@ -41,7 +40,7 @@ public class AnimeSpeedLines implements ClientModInitializer {
         // This code runs as soon as Minecraft is in a mod-load-ready state.
         // However, some things (like resources) may still be uninitialized.
         // Proceed with mild caution.
-        LOGGER.info("Hello AnimeSpeedLines!");
+        LOGGER.info("{} initialized!", MOD_ID);
 
         ShaderEffectRenderCallback.EVENT.register(tickDelta -> {
             if (!shouldRender) return;

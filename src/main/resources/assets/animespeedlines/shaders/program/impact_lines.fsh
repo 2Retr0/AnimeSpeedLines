@@ -73,9 +73,9 @@ void main() {
 
     // We want an iteration-specific hash so that spike radius isn't dependent
     // purely on angle.
-    float p_rand = 0.5f * hash(iteration) + 0.5f;
-    float luminance = dot(tex, vec3(0.299, 0.587, 0.114));
-    float target_alpha = TARGET_ALPHA * mix(0.25f, 1.f, luminance);
+    float p_rand = mix(0.5f, 1.f, hash(iteration));
+    float luminance = dot(tex, vec3(0.2126, 0.7152, 0.0722));
+    float target_alpha = TARGET_ALPHA * mix(0.15f, 1.f, luminance);
     float line_radius = 1.f - pow(max(0.f, 1.6f * shape - 0.6f), 2.f);
     float line_alpha =  1.f - 2.f*shape * target_alpha*Weight;
 
@@ -90,7 +90,7 @@ void main() {
     float d = lines_sdf(st, 0.7f, SUBDIVISIONS, w);
     vec3 col = (d > 0.f) ? vec3(1.f) : tex;
     // Use smoothstep() for anti-aliasing
-    col = mix(tex, vec3(1.f), 1.f - smoothstep(0.f, 0.001f, abs(d)));
+    col = mix(col, vec3(1.f), 1.f - smoothstep(0.f, 0.001f, abs(d)));
     // Alpha increases when line begins to recede
     col = mix(col, tex, line_alpha);
     fragColor = vec4(col, 1.f);
